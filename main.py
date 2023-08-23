@@ -19,6 +19,8 @@ import xml.dom.minidom
 def dom_rep():
     # body节点的子节点库
     body_child = ['w:p','w:tbl','w:sdt','w:bookmarkStart','w:bookmarkEnd','w:sectPr']
+    dom_rely_dict = {}
+    return body_child, dom_rely_dict
 
 
 def docx_zip_unzip(root: str='', pre_files_dir:str='') -> None:
@@ -41,6 +43,40 @@ def docx_zip_unzip(root: str='', pre_files_dir:str='') -> None:
             with zipfile.ZipFile(new_file_path, 'r') as zip_ref:
                 # 解压缩文件到指定目录
                 zip_ref.extractall(unzipdir + file_name)
+
+
+dom_rely_dict : {str:list}= {}
+def recurrent_dom(root_dom):
+    """
+    循环遍历节点，返回每种节点的所有子节点.
+    其中：root_dom将作为父级节点来获取其直接子节点
+    默认该节点不为空
+    :return: [dom_lst]
+    """
+
+    # 获取节点的名称
+    root_dom_name = root_dom.nodeName
+    # 判断节点是否在节点字典中
+    if root_dom_name not in dom_rely_dict.keys():
+        dom_rely_dict[root_dom_name] = []
+
+    # 获取该节点的直接子节点，并依次遍历
+    child_doms = root_dom.childNodes
+    if len(child_doms) == 0:
+        return
+    else:
+        for child_dom in child_doms:
+            child_dom_name = child_dom.nodeName
+            if child_dom_name not in dom_rely_dict.get(root_dom_name):
+                dom_rely_dict[root_dom_name].append(child_dom_name)
+
+            recurrent_dom(child_dom)
+        return
+
+
+
+
+
 
 # 遍历所有的xml文档，分析同级标签
 def parse_xml_first_tag(xml_dir:str=''):
@@ -86,17 +122,10 @@ def parse_xml_first_tag(xml_dir:str=''):
                         tag_lst.append(main_dom_name)
 
 
+                # 遍历所有的子节点
+                recurrent_dom(body_dom)
 
-
-                for main_dom in main_doms:
-                    if
-
-
-
-        print('===================')
-        for x in tag_lst:
-            print(x)
-        print(len(tag_lst))
+        print(dom_rely_dict)
 
 
 
