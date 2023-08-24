@@ -5,6 +5,7 @@ Author   : Hillking
 File     : main.py
 Function : docx文档解析
 """
+import json
 import os
 import shutil
 import zipfile
@@ -13,6 +14,10 @@ from xml.dom.minidom import parse   ##
 import xml.dom.minidom
 
 # https://docs.python.org/zh-cn/3/library/xml.dom.minidom.html
+
+
+# 全局变量库
+dom_rely_dict : {str:list}= {}
 
 
 # 节点库
@@ -45,8 +50,7 @@ def docx_zip_unzip(root: str='', pre_files_dir:str='') -> None:
                 zip_ref.extractall(unzipdir + file_name)
 
 
-dom_rely_dict : {str:list}= {}
-def recurrent_dom(root_dom):
+def set_recurrent_dom(root_dom: xml.dom.minidom.Element) -> None:
     """
     循环遍历节点，返回每种节点的所有子节点.
     其中：root_dom将作为父级节点来获取其直接子节点
@@ -70,16 +74,36 @@ def recurrent_dom(root_dom):
             if child_dom_name not in dom_rely_dict.get(root_dom_name):
                 dom_rely_dict[root_dom_name].append(child_dom_name)
 
-            recurrent_dom(child_dom)
+            set_recurrent_dom(child_dom)
         return
 
+def get_recurrent_dom(root_dom: xml.dom.minidom.Element) -> None:
+    """
+    循环遍历节点，返回每个节点的所有直接子节点列表.
+    其中：root_dom将作为父级节点来获取其直接子节点
+    默认该节点不为空
+    :return: [dom_lst]
+    """
 
+    # 获取节点的名称
+    root_dom_name = root_dom.nodeName
 
+    # 获取该节点的直接子节点，并依次遍历
+    child_doms = root_dom.childNodes
 
+    if len(child_doms) == 0:
+        return
+    else:
+        for child_dom in child_doms:
+            child_dom_name = child_dom.nodeName
+            if child_dom_name not in dom_rely_dict.get(root_dom_name):
+                dom_rely_dict[root_dom_name].append(child_dom_name)
 
+            set_recurrent_dom(child_dom)
+        return
 
-# 遍历所有的xml文档，分析同级标签
-def parse_xml_first_tag(xml_dir:str=''):
+# 遍历所有的xml文档，將所有的节点依赖关系保存到字典及文件中
+def parse_xml_first_tag(xml_dir:str='') -> None:
     # 定义方法内的全局变量
     tag_lst = []
     tag_lst_only = []
@@ -123,13 +147,63 @@ def parse_xml_first_tag(xml_dir:str=''):
 
 
                 # 遍历所有的子节点
-                recurrent_dom(body_dom)
+                set_recurrent_dom(body_dom)
 
-        print(dom_rely_dict)
+        # print(dom_rely_dict)
+        # dom_json = json.dumps(dom_rely_dict)
+        # with open("dom.json", 'a', encoding='utf-8') as jsonw:
+        #     jsonw.write(dom_json)
+
+
+def get_and_analyse_dom(dom_name: str='') -> None:
+    child_dom_name = dom_rely_dict.get(dom_name)
+    print(child_dom_name)
+
+
+
+father_dom = []
+grandfather_dom = []
+p_father_dom = []
+def get_content(root_dom:xml.dom.minidom.Element):
+    root_dom_name  = root_dom.nodeName
+    if root_dom_name == 'w:t':
+        dom_text = root_dom.childNodes[0].data
+        print(dom_text)
+
+        f_dom = root_dom.parentNode
+        g_dom = f_dom.parentNode
+        if f_dom.nodeName not in father_dom:
+            father_dom.append(f_dom.nodeName)
+        if g_dom.nodeName not in grandfather_dom:
+            grandfather_dom.append(g_dom.nodeName)
+
+    if root_dom_name == 'w:p':
+        p_dom = root_dom.parentNode
+        if p_dom.nodeName not in p_father_dom:
+            p_father_dom.append(p_dom.nodeName)
+
+    child_doms = root_dom.childNodes
+    if len(child_doms) ==0:
+        return
+
+    for child_dom in child_doms:
+        get_content(child_dom)
+
+
+
+def get_text_from_dom(xml_path:str=''):
+    dom_xml = parse(xml_path)
+    root_dom = dom_xml.documentElement  # 获取文档唯一的根节点 <w:document>
+    root_dom_name = root_dom.nodeName
+
+    get_content(root_dom)
 
 
 
 
+
+
+def parse_docx_content(root_dom:xml.dom.minidom.Element):
 
 
 
@@ -147,10 +221,22 @@ if __name__ == '__main__':
     # docx_zip_unzip(root, pre_file_name)
 
 
-    # 2.
-    parse_xml_first_tag(root + '\压缩包解压目录\\')
+    # 2.遍历所有的xml文档，將所有的节点依赖关系保存到字典及文件中
+    # parse_xml_first_tag(root + '\压缩包解压目录\\')
 
 
+    # 3.查看关键标签
+    # get_and_analyse_dom('w:p')
+
+    # 4.获取标签中的全部文本
+    get_text_from_dom('D:\Project\Dataset\排版-完整版财务知识\压缩包解压目录\\2 贝壳集团核算月结管理制度\word\document.xml')
+
+    print('========father_doms========')
+    print(father_dom)
+    print('========grandfather_doms========')
+    print(grandfather_dom)
+    print('========p_father_doms========')
+    print(p_father_dom)
 
 
 
