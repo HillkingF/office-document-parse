@@ -87,6 +87,7 @@ class NumberParse:
             raise os.error(2, '编号节点为空！===：None')
 
         root_dom_name = root_dom.nodeName
+        # print(root_dom_name)
         lvlText_infact = ''
         if root_dom_name == 'w:numPr':  # 编号解析
             num_level = ''
@@ -104,7 +105,11 @@ class NumberParse:
 
             # 获取numid和absid的映射关系、编号级别对应的属性
             absnum_id = self.numid_absid_dict.get(num_id)
+            if absnum_id is None:
+                return ''
             abs_level_attr = self.abstractnum_dict.get(absnum_id).get(num_level)
+            if abs_level_attr is None:
+                return ''
 
 
             start_attr = abs_level_attr.get('start')   # abs_level_attr 属性解析
@@ -133,9 +138,14 @@ class NumberParse:
 
             # 解析真实的编号文本
             if numFmt_attr in ['chineseCounting','japaneseCounting']:
-                num_dict = {'0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九'}
+                num_dict = {'0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九', '10':'十'}
                 pattern = "(%\d+)"
                 lvlText_infact = re.sub(pattern, num_dict.get(start_num_infact), lvlText_attr)
+            elif numFmt_attr in ['decimal']:
+                # num_dict = {'0': '0', '1': '1', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九'}
+                pattern = "(%\d+)"
+                lvlText_infact = re.sub(pattern, str(start_num_infact), lvlText_attr)  # 模式，替换的文本，编号模板
+
             else:
                 # TODO:补充解析其他类型编号文本的代码
                 lvlText_infact = '非中文类型文本暂未解析'

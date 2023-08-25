@@ -16,7 +16,8 @@ class TextParse:
     def __init__(self, numbering_xml_path):
         # 初始化编号分析实例
         self.number_parse = NumberParse()
-        self.number_parse.get_numbering(numbering_xml_path)
+        if os.path.exists(numbering_xml_path):
+            self.number_parse.get_numbering(numbering_xml_path)
 
         # 段落编号指针
         self.para_pointer = -1
@@ -78,9 +79,11 @@ class TextParse:
                     if tb_cel_dom_name == 'w:tc':  # 解析每一行的每一列元素
                         tb_p_doms = tb_cel_dom.getElementsByTagName('w:p')
                         p_text = ''
-                        for tb_p_dom in tb_p_doms:
+                        for i, tb_p_dom in enumerate(tb_p_doms):
                             p_text = self.get_content_from_tag_p(tb_p_dom, p_text)
-                        p_text = ' ' if p_text == '' else p_text
+                            if i + 1 != len(tb_p_doms):
+                                p_text = p_text + '\n'
+                        p_text = ' ' if p_text in ['\n',''] else p_text
                         row_text = row_text + ' | ' + p_text
                 row_text = row_text + ' | \n'
                 tb_whole_text = tb_whole_text + row_text
@@ -114,6 +117,7 @@ class TextParse:
         if root_dom.nodeName == 'w:p':
             p_text = self.get_content_from_tag_p(root_dom, '')  # 文本段落处理
             if root_dom.parentNode.nodeName == 'w:body':
+                # print(p_text)
                 p_text = p_text.strip(' \n')
                 if p_text != '':
                     p_struct = []
@@ -124,6 +128,7 @@ class TextParse:
                     self.para_info_lst.append(p_struct)
         elif root_dom.nodeName == 'w:tbl':
             tb_whole_text, tb_row_lst = self.get_content_from_tag_tb(root_dom)
+            # print(tb_whole_text)
             tb_whole_text = tb_whole_text.strip('\n')
             tb_struct = []
             self.para_pointer += 1
