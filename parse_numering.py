@@ -2,7 +2,7 @@
 -*- coding: utf-8 -*-
 Time     : 2023/8/24
 Author   : Hillking
-File     : numering_parse.py
+File     : parse_numering.py
 Function : Parse numbering.xml
 """
 import os.path
@@ -132,24 +132,14 @@ class NumberParse:
                 self.num_pointer[absnum_id] = level_value
 
             # 解析真实的编号文本
-            if numFmt_attr == 'chineseCounting':
-                num_dict = {'0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六',
-                            '7': '七', '8': '八', '9': '九'}
-                # unit_dict = {'0':'', '1':'十', '2':'百', '3':'千'}
-                # zh_num = ''
-                # if numFmt_attr == 'chineseCounting':
-                #     num_len = len(start_num_infact)
-                #     for num_i in range(0, num_len):
-                #         if num_i == num_len - 1 and start_num_infact[num_i: num_i + 1] == '0':
-                #             raise os.error(2, '编号错误！======：' + start_num_infact)
-                #         else:
-                #             zh_num = num_dict[start_num_infact[num_i: num_i + 1]] + unit_dict[str(num_len - num_i - 1)] + zh_num
-                #     # 参考：https://wenku.baidu.com/view/d1808dd566ce0508763231126edb6f1afe00710a.html?_wkts_=1692869928776&bdQuery=python%E5%B0%86%E6%95%B0%E5%AD%97%E8%BD%AC%E6%8D%A2%E6%88%90%E5%AF%B9%E5%BA%94%E7%9A%84%E4%B8%AD%E6%96%87%E5%AD%97%E7%AC%A6
+            if numFmt_attr in ['chineseCounting','japaneseCounting']:
+                num_dict = {'0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九'}
                 pattern = "(%\d+)"
                 lvlText_infact = re.sub(pattern, num_dict.get(start_num_infact), lvlText_attr)
             else:
                 # TODO:补充解析其他类型编号文本的代码
                 lvlText_infact = '非中文类型文本暂未解析'
+                print(start_attr, numFmt_attr, lvlText_attr, )
 
             return lvlText_infact
         else:
