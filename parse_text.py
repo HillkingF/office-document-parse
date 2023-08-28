@@ -9,21 +9,43 @@ Function : 提取所有文本内容
 from xml.dom.minidom import Element
 import os
 from parse_numering import NumberParse
+from parse_annex import AnnexParse
+
+# 解析内容类型常量
+TYPE_TEXT = 'p'
+TYPE_FILE = 'F'
+TYPE_IMAGE = 'I'
 
 
 class TextParse:
 
-    def __init__(self, numbering_xml_path):
+    def __init__(self, numbering_xml_path, annex_dir, final_annex_dir):
         # 初始化编号分析实例
         self.number_parse = NumberParse()
         if os.path.exists(numbering_xml_path):
             self.number_parse.get_numbering(numbering_xml_path)
 
+        # 附件路径
+
+        # annex 关系
+        self.annex_example = AnnexParse(annex_dir)
+        self.annex_relation = self.annex_example.get_annex_relation()
+
+        # 附件转储根目录
+        self.annex_final_dir = final_annex_dir
+        if self.annex_relation != {} and not os.path.exists(self.annex_final_dir):
+            os.mkdir(self.annex_final_dir)
+            self.annex_example.copy_annex(self.annex_final_dir)
+
+
         # 段落编号指针
         self.para_pointer = -1
         self.para_info_lst: [[str]] = [] # 内部列表是一个三元组
 
-    def get_content_from_tag_p(self, root_dom: Element, p_text: str = '') -> str:
+
+
+
+    def get_content_from_tag_p(self, root_dom: Element, p_type: [str]=[], p_text: [str]=[] ) -> [[str], [str]]:
         # TODO: 修改段落文本解析代码
         '''
         :param root_dom: 节点：不为空节点
@@ -33,27 +55,74 @@ class TextParse:
         '''
 
         if root_dom is None:
-            return p_text
+            return p_type, p_text
 
         root_dom_name = root_dom.nodeName
+
         if root_dom_name == 'w:t':
             dom_text = root_dom.childNodes[0].data
-            p_text = p_text + dom_text
+            if dom_text == '' or dom_text is None:
+                return p_type, p_text
 
-        if root_dom_name == 'w:numPr':  # 编号解析
+            if len(p_type)==0:  # 新增
+                p_type.append(TYPE_TEXT)
+                p_text.append(dom_text)
+            elif len(p_type) != 0 and p_type[-1] == TYPE_TEXT:  # 同文本类型迭代
+                p_text[-1] = p_text[-1] + dom_text
+            elif len(p_type) != 0 and p_type[-1] != TYPE_TEXT:  # 异文件类型新增
+                p_type.append(TYPE_TEXT)
+                p_text.append(dom_text)
+
+            return p_type, p_text
+
+        elif root_dom_name == 'w:numPr':  # 编号解析
             num_text = self.number_parse.get_parse_number_text(root_dom)
+            if num_text == '' or num_text is None:
+                return p_type, p_text
+
             if '[？]' in num_text:
                 print('存在未知编号！===：'+ num_text)
 
-            p_text = p_text + num_text + ' '
+            if len(p_type)==0:  # 新增
+                p_type.append(TYPE_TEXT)
+                p_text.append(num_text)
+            elif len(p_type) != 0 and p_type[-1] == TYPE_TEXT:  # 同文本类型迭代
+                p_text[-1] = p_text[-1] + num_text
+            elif len(p_type) != 0 and p_type[-1] != TYPE_TEXT:  # 异文件类型新增
+                p_type.append(TYPE_TEXT)
+                p_text.append(num_text)
+            return p_type, p_text
+
+        elif root_dom_name == 'o:OLEObject':
+            attr_id = root_dom.getAttribute('r:id')
+            if attr_id == '' or attr_id is None:
+                print('附件id为空！')
+                return p_type, p_text
+            else:
+                if not self.annex_relation.get(attr_id):
+                    print('附件id对应的关系为空！', attr_id)
+                    return p_type, p_text
+                else:
+                    attr_rela = self.annex_relation.get(attr_id)
+                    # analyse attr
+                    attr_type = attr_rela.get('Type')
+                    attr_name = attr_rela.get('Target')
+
+                    if attr_type.split('/')[-1] == 'image':
+                        p_type.append(TYPE_IMAGE)
+                        p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                    else:
+                        p_type.append(TYPE_FILE)
+                        p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                    return p_type, p_text
 
         child_doms = root_dom.childNodes
         if len(child_doms) == 0:
-            return p_text
+            return p_type, p_text
 
         for child_dom in child_doms:
-            p_text = self.get_content_from_tag_p(child_dom, p_text)
-        return p_text
+            p_type, p_text = self.get_content_from_tag_p(child_dom, p_type, p_text)
+        return p_type, p_text
 
     def get_content_from_tag_tb(self, root_dom: Element) -> [str, [str]]:
         '''
@@ -79,13 +148,23 @@ class TextParse:
                     tb_cel_dom_name = tb_cel_dom.nodeName
                     if tb_cel_dom_name == 'w:tc':  # 解析每一行的每一列元素
                         tb_p_doms = tb_cel_dom.getElementsByTagName('w:p')
-                        p_text = ''
+                        p_text = []
+                        p_type = []
                         for i, tb_p_dom in enumerate(tb_p_doms):
-                            p_text = self.get_content_from_tag_p(tb_p_dom, p_text)
-                            if i + 1 != len(tb_p_doms):
-                                p_text = p_text + '\n'
-                        p_text = ' ' if p_text in ['\n',''] else p_text
-                        row_text = row_text + ' | ' + p_text
+                            p_type, p_text = self.get_content_from_tag_p(tb_p_dom, p_type, p_text)
+
+                            # if i + 1 != len(tb_p_doms):
+                            #     if len(p_text) == 0:
+                            #         p_text.append(' ')
+                            #         p_type.append(TYPE_TEXT)
+
+                        # p_text[-1] = ' ' if p_text[-1] == '' else p_text
+                        if len(p_text) == 0:
+                            row_text = row_text + ' | ' + ' '  # 这里默认为表格中只有文本，不存在其他附件！！！
+                        else:
+                            row_text = row_text + ' | ' + p_text[-1]  # 这里默认为表格中只有文本，不存在其他附件！！！
+                        # x = p_text[-1]
+                        # row_text = row_text + ' | ' + x   # 这里默认为表格中只有文本，不存在其他附件！！！
                 row_text = row_text + ' | \n'
                 tb_whole_text = tb_whole_text + row_text
                 tb_row_lst.append(row_text)
@@ -116,15 +195,14 @@ class TextParse:
 
         # Min Dom Levels
         if root_dom.nodeName == 'w:p':
-            p_text = self.get_content_from_tag_p(root_dom, '')  # 文本段落处理
+            p_type, p_text = self.get_content_from_tag_p(root_dom, [] , [])  # 文本段落处理 ,这里默认该段落初始类型为文本，
             if root_dom.parentNode.nodeName == 'w:body':
                 # print(p_text)
-                p_text = p_text.strip(' \n')
-                if p_text != '':
+                if len(p_type) != 0:
                     p_struct = []
                     self.para_pointer += 1
                     p_struct.append(self.para_pointer)
-                    p_struct.append('P')
+                    p_struct.append(p_type)
                     p_struct.append(p_text)
                     self.para_info_lst.append(p_struct)
         elif root_dom.nodeName == 'w:tbl':

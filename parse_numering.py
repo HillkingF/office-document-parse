@@ -10,14 +10,11 @@ from xml.dom.minidom import Element, parse
 import re
 
 class NumberParse:
-    numid_absid_dict: {str: str}  # numid 和 abstractNumId的映射关系
-    abstractnum_dict: {str: {str: {str: str}}}  # 每个abstractNumId对应的所有级别及级别的属性
-    num_pointer: {str: {str: str}}  # 每种abs中，某一种级别，对应的第几个编号
 
     def __init__(self):
-        self.numid_absid_dict = {}
-        self.abstractnum_dict = {}
-        self.num_pointer = {}
+        self.numid_absid_dict: {str: str} = {} # numid 和 abstractNumId的映射关系
+        self.abstractnum_dict: {str: {str: {str: str}}} = {}   # 每个abstractNumId对应的所有级别及级别的属性
+        self.num_pointer: {str: {str: str}} = {} # 每种abs中，某一种级别，对应的第几个编号
 
     def get_num_from_numbering_xml(self, root_dom: Element):
         '''
