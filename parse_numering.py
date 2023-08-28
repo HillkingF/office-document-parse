@@ -87,7 +87,6 @@ class NumberParse:
             raise os.error(2, '编号节点为空！===：None')
 
         root_dom_name = root_dom.nodeName
-        # print(root_dom_name)
         lvlText_infact = ''
         if root_dom_name == 'w:numPr':  # 编号解析
             num_level = ''
@@ -137,19 +136,50 @@ class NumberParse:
                 self.num_pointer[absnum_id] = level_value
 
             # 解析真实的编号文本
-            if numFmt_attr in ['chineseCounting','japaneseCounting']:
+            if numFmt_attr in ['chineseCounting','japaneseCounting','chineseCountingThousand','ideographDigital']:
                 num_dict = {'0': '零', '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九', '10':'十'}
                 pattern = "(%\d+)"
-                lvlText_infact = re.sub(pattern, num_dict.get(start_num_infact), lvlText_attr)
+                if num_dict.get(start_num_infact) is not None:
+                    lvlText_infact = re.sub(pattern, num_dict.get(start_num_infact), lvlText_attr)
+                else:
+                    lvlText_infact = re.sub(pattern, '[？]', lvlText_attr)
             elif numFmt_attr in ['decimal']:
-                # num_dict = {'0': '0', '1': '1', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六', '7': '七', '8': '八', '9': '九'}
                 pattern = "(%\d+)"
                 lvlText_infact = re.sub(pattern, str(start_num_infact), lvlText_attr)  # 模式，替换的文本，编号模板
+            elif numFmt_attr in ['bullet']:
+                if '%' not in lvlText_attr:
+                    lvlText_infact = lvlText_attr
+                else:
+                    lvlText_infact = '[类型未知,存在%]'
+                    print(lvlText_infact)
+                    exit()
+            elif numFmt_attr in ['decimalEnclosedCircle', 'decimalEnclosedCircleChinese']:
+                num_dict = {'0': '[？]', '1': '①', '2': '②', '3': '③', '4': '④', '5': '⑤', '6': '⑥', '7': '⑦', '8': '⑧', '9': '⑨', '10':'⑩'}
+                pattern = "(%\d+)"
 
+                if start_num_infact in num_dict.keys() is not None:
+                    lvlText_infact = re.sub(pattern, num_dict.get(start_num_infact), lvlText_attr)
+                else:
+                    lvlText_infact = re.sub(pattern, '', lvlText_attr)
+            elif numFmt_attr in ['none']:
+                lvlText_infact = lvlText_attr
+            elif numFmt_attr == 'upperLetter':
+                upperlst = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                val_lst = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]
+                upper_dict = {str(val):upperlst[val-1: val] for val in val_lst}
+                pattern = "(%\d+)"
+                if start_num_infact in upper_dict.keys() is not None:
+                    lvlText_infact = re.sub(pattern, upper_dict.get(start_num_infact), lvlText_attr)
+                else:
+                    lvlText_infact = re.sub(pattern, '', lvlText_attr)
             else:
                 # TODO:补充解析其他类型编号文本的代码
-                lvlText_infact = '非中文类型文本暂未解析'
-                print(start_attr, numFmt_attr, lvlText_attr, )
+                lvlText_infact = '【未解析类型编号】'
+                print(lvlText_infact)
+                print(root_dom_name)
+                print(start_attr, numFmt_attr, lvlText_attr)
+                exit()
+
 
             return lvlText_infact
         else:

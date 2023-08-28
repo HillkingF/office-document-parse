@@ -42,9 +42,10 @@ class TextParse:
 
         if root_dom_name == 'w:numPr':  # 编号解析
             num_text = self.number_parse.get_parse_number_text(root_dom)
+            if '[？]' in num_text:
+                print('存在未知编号！===：'+ num_text)
+
             p_text = p_text + num_text + ' '
-            if p_text == '非中文类型文本暂未解析':
-                pass
 
         child_doms = root_dom.childNodes
         if len(child_doms) == 0:
