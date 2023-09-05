@@ -110,10 +110,12 @@ class TextParse:
 
                     if attr_type.split('/')[-1] == 'image':
                         p_type.append(TYPE_IMAGE)
-                        p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                        # p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                        p_text.append(attr_name)   # 附件元组文本内容
                     else:
                         p_type.append(TYPE_FILE)
-                        p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                        # p_text.append(os.path.join(self.annex_final_dir, attr_name))
+                        p_text.append(attr_name)
                     return p_type, p_text
 
         child_doms = root_dom.childNodes
@@ -209,18 +211,19 @@ class TextParse:
             tb_whole_text, tb_row_lst = self.get_content_from_tag_tb(root_dom)
             # print(tb_whole_text)
             tb_whole_text = tb_whole_text.strip('\n')
+            tb_type = ['TB']
+            tb_text = [tb_whole_text]
+
             tb_struct = []
             self.para_pointer += 1
             tb_struct.append(self.para_pointer)
-            tb_struct.append('TB')
-            tb_struct.append(tb_whole_text)
+            tb_struct.append(tb_type)
+            tb_struct.append(tb_text)
             self.para_info_lst.append(tb_struct)
 
         elif root_dom.nodeName == 'w:sdt':
             self.get_content_from_tag_sdt(root_dom)
 
-        # TODO: 待扩展的标签：图片、附件
-        # elif root_dom.nodeName == '':
 
         # 子节点循环遍历
         child_doms = root_dom.childNodes
