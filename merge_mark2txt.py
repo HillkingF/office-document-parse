@@ -170,9 +170,7 @@ class MergeParseAndMark:
             # 3.标题更新
             if len_content == 1 and para_type_lst[0] == 'p' and stack_content is not None and para_content_lst[0].strip('\n\t').replace(' ','') == stack_content.replace(' ',''):
                 # print('是章节', stack_level, stack_num, stack_content, para_content_lst[0].strip('\n\t').replace(' ',''))
-                # 解析标题级别
-                # mark_row = self.mark_lines[self.mark_lines_pointer]  # 当前标题行
-                # stack_level, stack_num, stack_content = self.mark_stack.pattern_level(mark_row)
+                
                 if stack_num == -1:  # 说明是标题
                     self.title = stack_content
                 else:
