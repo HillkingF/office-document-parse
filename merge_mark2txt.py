@@ -211,7 +211,7 @@ class MergeParseAndMark:
 
 
     def get_index_triplet(self):
-        return self.index_triplet
+        return self.title, self.index_triplet
 
 
 
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     from xml.dom.minidom import parse
     from parse_text import TextParse
-    dir = '2 贝壳集团核算月结管理制度'
+    dir = '2 贝壳集团核算月结管理制度 - 副本'   #'2 贝壳集团核算月结管理制度'
     docu_xml = os.path.join(docxs_dir, dir, 'word', 'document.xml')
     numb_xml = os.path.join(docxs_dir, dir, 'word', 'numbering.xml')
     docu_xml_rels = os.path.join(docxs_dir, dir, 'word')
@@ -237,12 +237,15 @@ if __name__ == '__main__':
     text_parse = TextParse(numb_xml, docu_xml_rels, final_annex_dir)
     text_parse.parse_different_dom(root_dom)  # 根节点初始化
     para_lst = text_parse.para_info_lst
+    # for x in para_lst:
+    #     print(x)
+    # exit()
 
 
     mark_file_path = 'C:\\Users\\fengwenni001\Desktop\BAC文档标注说明\\2 贝壳集团核算月结管理制度.txt'
     merge = MergeParseAndMark(para_lst, mark_file_path)
     merge.build_index_content()
-    index_and_content = merge.get_index_triplet()   # 新的三元组
+    title, index_and_content = merge.get_index_triplet()   # 新的三元组
     for x in index_and_content:
-        print(x)
+        print(title, x)
 
