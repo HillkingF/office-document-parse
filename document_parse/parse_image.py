@@ -34,7 +34,7 @@ class ImageParse:
 
     def get_image_path(self, root_dom: Element, annex_relation):
         root_dom_name = root_dom.nodeName
-        if root_dom_name == 'w:drawing':
+        if root_dom_name == 'pic:pic':  # w:drawing
             # 获取图像编号
             pic_code_doms = root_dom.getElementsByTagName('a:blip')
             if len(pic_code_doms) != 1:
@@ -43,27 +43,11 @@ class ImageParse:
             attr_rela = annex_relation.get(pic_code)
             attr_type = attr_rela.get('Type')
             attr_name = attr_rela.get('Target').split('/')[-1]
-            if attr_name.split('.')[-1] in ['png', 'jpg', 'emf']:
+            if attr_name.split('.')[-1] in ['png', 'jpg', 'emf','jpeg']:
                 file_type = TYPE_IMAGE
                 file_name = attr_name
             else:
                 raise('非图片或其他类型图片！')
             return file_type, file_name
-
-def image_to_base64(image_path):
-        with open(image_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
-            return encoded_string.decode("utf-8")  # 将bytes转换为字符串
-
-
-
-if __name__ == '__main__':
-    import base64
-
-    # 使用示例
-    image_path = "C:\\Users\\fengwenni001\Desktop\壁纸\\1.jpg"
-    base64_data = image_to_base64(image_path)
-    print(base64_data)
-
 
 
