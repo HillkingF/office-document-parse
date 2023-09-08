@@ -293,7 +293,7 @@ class TextParse:
             self.para_pointer += 1
             p_struct.append(self.para_pointer)
             p_struct.append(tb_type)
-            p_struct.append(tb_text)  # 表格内容结构体：包含df序列化后的表格文本和表格完整结构体
+            p_struct.append([tb_text])  # 表格内容结构体：包含df序列化后的表格文本和表格完整结构体
             self.para_info_lst.append(p_struct)
 
         elif root_dom.nodeName == 'w:sdt':
@@ -318,5 +318,6 @@ if __name__ == '__main__':
     text_parse = TextParse('xxx\word\\numbering.xml')
     text_parse.parse_different_dom(root_dom)  # 根节点初始化
     para_lst = text_parse.para_info_lst
+
     for para in para_lst:
         print(para)

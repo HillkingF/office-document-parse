@@ -136,7 +136,7 @@ class MergeParseAndMark:
 
         # 新三元组
         self.index_triplet = []
-        self.triplet_1 = ''
+        # self.triplet_1 = ''
         self.triplet_2 = []
         self.triplet_3 = []
 
@@ -177,13 +177,14 @@ class MergeParseAndMark:
                     if self.mark_last_line_attr == '文本段':
                         # 构建新的三元组行
                         triplet = []
+                        triplet.append(self.title)
                         triplet.append(self.mark_stack.title_index_text())
                         triplet.append(self.triplet_2)
                         triplet.append(self.triplet_3)
                         self.index_triplet.append(triplet)
 
                         # 更新三元组元素
-                        self.triplet_1 = ''
+                        # self.triplet_1 = ''
                         self.triplet_2 = []
                         self.triplet_3 = []
                     # 更新栈元素
@@ -200,18 +201,19 @@ class MergeParseAndMark:
         if self.triplet_2 != []:
             # 构建新的三元组行
             triplet = []
+            triplet.append(self.title)
             triplet.append(self.mark_stack.title_index_text())
             triplet.append(self.triplet_2)
             triplet.append(self.triplet_3)
             self.index_triplet.append(triplet)
             # 更新三元组元素
-            self.triplet_1 = ''
+            # self.triplet_1 = ''
             self.triplet_2 = []
             self.triplet_3 = []
 
 
     def get_index_triplet(self):
-        return self.title, self.index_triplet
+        return self.index_triplet
 
 
 
@@ -245,7 +247,12 @@ if __name__ == '__main__':
     mark_file_path = 'C:\\Users\\fengwenni001\Desktop\BAC文档标注说明\\2 贝壳集团核算月结管理制度.txt'
     merge = MergeParseAndMark(para_lst, mark_file_path)
     merge.build_index_content()
-    title, index_and_content = merge.get_index_triplet()   # 新的三元组
+    index_and_content = merge.get_index_triplet()
     for x in index_and_content:
-        print(title, x)
+        print(x)
 
+
+    # 序列化保存该四元组列表
+    import pickle
+    with open('triplets.txt', 'wb') as f1:
+        pickle.dump(index_and_content, f1)
