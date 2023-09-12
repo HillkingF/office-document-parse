@@ -228,12 +228,12 @@ class TextParse:
                         for c in range(1, gridSpan_nums + 1):  # 水平合并单元格构造
                             cel_struct = {}
                             if c == 1:
-                                cel_struct['text'] = cel_text
+                                cel_struct['title'] = cel_text
                                 cel_struct['v_format'] = vMerge_dom_format
                                 cel_struct['h_format'] = 'single' if gridSpan_nums == 1 else 'restart'
                                 index_row_lst.append(cel_text)
                             else:
-                                cel_struct['text'] = ''
+                                cel_struct['title'] = ''
                                 cel_struct['v_format'] = vMerge_dom_format
                                 cel_struct['h_format'] = 'continue'
                                 index_row_lst.append('')
@@ -241,6 +241,19 @@ class TextParse:
                 # 文本list、结构体lst
                 tb_struct.get('content').append(tr_cel_lst)
                 index_text_list.append(index_row_lst)
+
+        # 处理表格结构体为前端可以套用的形式
+        tmp_tb_list = tb_struct.get('content')
+        for i, tmp_tb_row in enumerate(tmp_tb_list):
+            j = 1
+            for tmp_tb_cel in tmp_tb_row:
+                if i == 0:
+                    tmp_tb_cel['dataIndex'] = 'Id' + str(j)
+                else:
+                    tmp_tb_cel['Id' + str(j)] = tmp_tb_cel.get('title')
+                    tmp_tb_cel.pop('title')
+                j += 1
+        tb_struct['content'] = tmp_tb_list
 
         if tmp_tblGrid_cnts != 1:  # 列数标签验证
             raise (2, 'tbl表格的列数标签组<w:tblGrid>数量不为1！')

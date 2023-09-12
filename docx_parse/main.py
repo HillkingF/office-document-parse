@@ -115,3 +115,7 @@ if __name__ == '__main__':
     triplet_dir, annex_dir = tools.get_n_triplet()
     print(triplet_dir)
     print(annex_dir)
+
+    # with open(r'D:\Project\Dataset\排版-完整版财务知识\triplet\2 贝壳集团核算月结管理制度.pickle', 'rb') as f1:
+    #     x = pickle.load(f1)
+    #     print(x)
